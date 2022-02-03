@@ -11,6 +11,8 @@ import {getOverride, getOverrideProps} from '../helpers/overrides.js';
 import {UIDConsumer} from 'react-uid';
 import {
   Label as StyledLabel,
+  LabelEndEnhancer as StyledLabelEndEnhancer,
+  LabelContainer as StyledLabelContainer,
   Caption as StyledCaption,
   ControlContainer as StyledControlContainer,
 } from './styled-components.js';
@@ -41,12 +43,15 @@ export default class FormControl extends React.Component<
     label: null,
     caption: null,
     disabled: false,
+    counter: false,
   };
 
   render() {
     const {
       overrides: {
         Label: LabelOverride,
+        LabelEndEnhancer: LabelEndEnhancerOverride,
+        LabelContainer: LabelContainerOverride,
         Caption: CaptionOverride,
         ControlContainer: ControlContainerOverride,
       },
@@ -57,6 +62,7 @@ export default class FormControl extends React.Component<
       positive,
       htmlFor,
       children,
+      counter,
     } = this.props;
 
     const onlyChildProps = React.Children.only(children).props;
@@ -68,6 +74,10 @@ export default class FormControl extends React.Component<
     };
 
     const Label = getOverride(LabelOverride) || StyledLabel;
+    const LabelEndEnhancer =
+      getOverride(LabelEndEnhancerOverride) || StyledLabelEndEnhancer;
+    const LabelContainer =
+      getOverride(LabelContainerOverride) || StyledLabelContainer;
     const Caption = getOverride(CaptionOverride) || StyledCaption;
     const ControlContainer =
       getOverride(ControlContainerOverride) || StyledControlContainer;
@@ -83,17 +93,57 @@ export default class FormControl extends React.Component<
       }
     }
 
+    let labelEndEnhancer = this.props.labelEndEnhancer;
+    if (counter) {
+      let maxLength: ?number = null;
+      let length: ?number = null;
+
+      if (typeof counter === 'object') {
+        length = counter.length;
+        maxLength = counter.maxLength;
+      }
+
+      maxLength = maxLength ?? onlyChildProps.maxLength;
+      if (length == null && typeof onlyChildProps.value === 'string') {
+        length = onlyChildProps.value.length;
+      }
+
+      if (length == null) {
+        length = 0;
+        console.warn(
+          'baseui: from-control length must either be explicitly set via counter prop, or value prop as a string "value" prop on the child component.',
+        );
+      }
+      labelEndEnhancer =
+        maxLength == null ? `${length}` : `${length}/${maxLength}`;
+    }
+
     return (
       <React.Fragment>
         {label && (
-          <Label
-            data-baseweb="form-control-label"
-            htmlFor={htmlFor || onlyChildProps.id}
+          <LabelContainer
             {...sharedProps}
-            {...getOverrideProps(LabelOverride)}
+            {...getOverrideProps(LabelContainerOverride)}
           >
-            {typeof label === 'function' ? label(sharedProps) : label}
-          </Label>
+            <Label
+              data-baseweb="form-control-label"
+              htmlFor={htmlFor || onlyChildProps.id}
+              {...sharedProps}
+              {...getOverrideProps(LabelOverride)}
+            >
+              {typeof label === 'function' ? label(sharedProps) : label}
+            </Label>
+            {labelEndEnhancer && (
+              <LabelEndEnhancer
+                {...sharedProps}
+                {...getOverrideProps(LabelEndEnhancerOverride)}
+              >
+                {typeof labelEndEnhancer === 'function'
+                  ? labelEndEnhancer(this.props)
+                  : labelEndEnhancer}
+              </LabelEndEnhancer>
+            )}
+          </LabelContainer>
         )}
         <UIDConsumer>
           {captionId => (

@@ -31,6 +31,25 @@ export const Label = styled<StylePropsT>('label', props => {
   };
 });
 
+export const LabelContainer = styled<StylePropsT>('span', () => ({
+  display: 'flex',
+  width: '100%',
+}));
+
+export const LabelEndEnhancer = styled<StylePropsT>(
+  'span',
+  ({$disabled, $theme: {colors, sizing, typography}}) => ({
+    ...typography.font250,
+    flex: 0,
+    fontWeight: 500,
+    width: '100%',
+    marginTop: sizing.scale300,
+    marginRight: 0,
+    marginBottom: sizing.scale300,
+    color: $disabled ? colors.contentSecondary : colors.contentPrimary,
+  }),
+);
+
 export const Caption = styled<StylePropsT>('div', props => {
   const {
     $error,
